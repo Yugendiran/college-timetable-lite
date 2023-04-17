@@ -1,5 +1,6 @@
 <?php
 include 'db/conn.php';
+header('location: logout.php');
 include 'components/header.php';
 include 'components/sidebar.php';
 include 'components/topbar.php';
