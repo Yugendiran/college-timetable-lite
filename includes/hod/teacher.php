@@ -1,5 +1,8 @@
 <?php
 if(isset($_GET['action'])){
+    ?>
+
+    <?php
     if($_GET['action'] == 'add_teacher'){
 ?>
 <div class="row">
@@ -15,7 +18,6 @@ if($_POST) {
     $newName = $_POST['new_name'];
     $newEmail = $_POST['new_email'];
     $newPass = $_POST['new_pass'];
-    $sectionId = $_POST['section_id'];
 
     $select_user_query = "SELECT * FROM users WHERE userEmail = '$newEmail'";
     $select_user_result = mysqli_query($connection, $select_user_query);
@@ -29,7 +31,12 @@ if($_POST) {
 
         $user_insert_id = mysqli_insert_id($connection);
 
-        $insert_user_section_query = "INSERT INTO user_section (userId, sectionId, role) VALUES($user_insert_id, '$sectionId', 'teacher')";
+        $select_dept_id_query = "SELECT * FROM user_section WHERE role='hod' AND userId = $loginUserId";
+        $select_dept_id_result = mysqli_query($connection, $select_dept_id_query);
+        $select_dept_id_row = mysqli_fetch_assoc($select_dept_id_result);
+        $dept_id = $select_dept_id_row['deptId'];
+
+        $insert_user_section_query = "INSERT INTO user_section (userId, deptId, role) VALUES($user_insert_id, $dept_id, 'teacher')";
         $insert_user_section_result = mysqli_query($connection, $insert_user_section_query);
 
         if(!$insert_teacher_result){
@@ -57,20 +64,6 @@ if($_POST) {
                         <label for="exampleInputPassword1">Password</label>
                         <input type="password" name="new_pass" class="form-control" id="exampleInputPassword1" placeholder="Password">
                     </div>
-                    <div class="form-group">
-                        <label for="exampleInputPassword1">Section</label>
-                        <select name="section_id" class="form-control">
-                            <?php
-$select_all_sections_query = "SELECT * FROM section WHERE deptId IN (SELECT deptId FROM section WHERE sectionId IN (SELECT sectionId FROM user_section WHERE role='hod' AND userId = '$loginUserId'))";
-$select_all_sections_result = mysqli_query($connection, $select_all_sections_query);
-while($row = mysqli_fetch_assoc($select_all_sections_result)){
-                            ?>
-                            <option value="<?php echo $row['sectionId'] ?>"><?php echo $row['sectionName'] ?></option>
-                            <?php
-}
-                            ?>
-                        </select>
-                    </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
@@ -79,6 +72,23 @@ while($row = mysqli_fetch_assoc($select_all_sections_result)){
 </div>
 <?php
     }
+    ?>
+
+    <?php
+if($_GET['action'] == 'delete_teacher' && isset($_GET['id'])){
+    $del_id = $_GET['id'];
+    $delete_teacher_query = "DELETE FROM user_section WHERE userId = $del_id";
+    $delete_teacher_result = mysqli_query($connection, $delete_teacher_query);
+
+    if(!$delete_teacher_result){
+        echo "Something Went wrong";
+    }else{
+        header('location: hod.php?page=teacher');
+    }
+}
+    ?>
+
+    <?php
 }
 ?>
 
@@ -105,6 +115,7 @@ while($row = mysqli_fetch_assoc($select_all_sections_result)){
                         <th>Name</th>
                         <th>Email</th>
                         <th>Subject</th>
+                        <th>Delete</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -113,12 +124,13 @@ while($row = mysqli_fetch_assoc($select_all_sections_result)){
                         <th>Name</th>
                         <th>Email</th>
                         <th>Subject</th>
+                        <th>Delete</th>
                     </tr>
                 </tfoot>
                 <tbody>
                     <?php
 $sno = 1;
-$select_class_teachers_query = "SELECT * FROM users WHERE userId IN (SELECT userId FROM user_section WHERE role='teacher' AND sectionId = (SELECT sectionId FROM user_section WHERE userId = $isLoggedId))";
+$select_class_teachers_query = "SELECT * FROM users WHERE userId IN (SELECT userId FROM user_section WHERE role='teacher' AND deptId IN (SELECT deptId FROM user_section WHERE role='hod' AND userId = $loginUserId))";
 $select_class_teachers_result = mysqli_query($connection, $select_class_teachers_query);
 while($row = mysqli_fetch_assoc($select_class_teachers_result)){
     $userId = $row['userId'];
@@ -128,7 +140,7 @@ while($row = mysqli_fetch_assoc($select_class_teachers_result)){
                         <td><?php echo $row['userName']; ?></td>
                         <td><?php echo $row['userEmail']; ?></td>
                         <td><?php 
-                        $select_subjects_query = "SELECT * FROM subject WHERE userId = $userId AND deptId = (SELECT deptId FROM section WHERE sectionId = (SELECT sectionId FROM user_section WHERE userId = $userId AND role='teacher'))";
+                        $select_subjects_query = "SELECT * FROM subject WHERE userId = $userId AND deptId = (SELECT deptId FROM user_section WHERE userId = $userId AND role='teacher')";
                         $select_subjects_result = mysqli_query($connection, $select_subjects_query);
                         while($row2 = mysqli_fetch_assoc($select_subjects_result)){
                             ?>
@@ -136,6 +148,7 @@ while($row = mysqli_fetch_assoc($select_class_teachers_result)){
                             <?php
                         }
                         ?></td>
+                        <td><a href="hod.php?page=teacher&action=delete_teacher&id=<?php echo $userId; ?>">Delete</a></td>
                     </tr>
                     <?php
 $sno++;
