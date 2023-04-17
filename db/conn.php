@@ -12,7 +12,7 @@ if(!$connection){
 if(!$_SESSION['isLoggedIn']){
     header('location: login.php');
 }else{
-    $isLoggedId = $_SESSION['isLoggedIn'];
+    $isLoggedIn = $_SESSION['isLoggedIn'];
     $loginUserId = $_SESSION['loginUserId'];
     $loginUserRole = $_SESSION['role'];
 }

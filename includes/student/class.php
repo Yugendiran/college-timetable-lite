@@ -26,7 +26,7 @@
                 <tbody>
                     <?php
 $sno = 1;
-$select_class_students_query = "SELECT * FROM users WHERE userId IN (SELECT userId FROM user_section WHERE role='student' AND sectionId = (SELECT sectionId FROM user_section WHERE userId = $isLoggedId))";
+$select_class_students_query = "SELECT * FROM users WHERE userId IN (SELECT userId FROM user_section WHERE role='student' AND deptId = (SELECT deptId FROM user_section WHERE userId = $loginUserId))";
 $select_class_students_result = mysqli_query($connection, $select_class_students_query);
 while($row = mysqli_fetch_assoc($select_class_students_result)){
                     ?>
